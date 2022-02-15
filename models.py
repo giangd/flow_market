@@ -573,7 +573,6 @@ class Group(BaseGroup):
             best_bid = None
             max_price = float('-inf')
             for obj in buys:
-                # if (obj["p_max"] > max_price and obj['status'] != 'expired'):
                 if (obj["p_max"] > max_price and not ("expired_by_cda_sell" in obj)):
                     max_price = obj["p_max"]
                     best_bid = obj
