@@ -41,7 +41,6 @@
       InputDropdown.hideAlgorithmicInputDropdown();
       BetsUI.convertDeadlinesToSeconds();
 
-      setTimeout(ProfitGraph.updateProfitLineFromUpcomingBet, 1000)
 
       MarketGraph.updateAxesText()
 
@@ -1207,8 +1206,6 @@
         // remove from active orders table
         removeActiveOrderTable(order.orderID);
 
-        // update profit graph
-        ProfitGraph.addOrderData(orderInData)
 
         return false;
       } else {
@@ -1288,260 +1285,6 @@
   ///////////////////////////////////////////////////////////////////////////////////
 
   var ctx = document.getElementById('myChart').getContext('2d');
-
-  // profitGraph
-  var myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-      datasets: [
-        {
-          borderWidth: 0,
-          pointStyle: 'line',
-
-          label: "",
-          data: [],
-          fill: { above: RED, below: GREEN, target: { value: 10 } },
-          pointRadius: 0,
-          borderColor: "",
-        },
-        {
-          borderWidth: 2,
-          pointStyle: 'line',
-
-          label: 'Profit Line',
-          data: [],
-          fill: false,
-          pointRadius: 0,
-          borderColor: 'black',
-        },
-
-        {
-          borderWidth: 2,
-          pointStyle: 'rect',
-
-          label: 'Profit',
-          borderColor: GREEN,
-          backgroundColor: GREEN,
-          // backgroundColor: 'rgba(0, 0, 0, 0)',
-          fill: false,
-          showLine: true,
-          lineTension: 0,
-          data: [],
-        },
-
-        {
-          borderWidth: 2,
-          pointStyle: 'rect',
-
-          label: 'Loss',
-          borderColor: RED,
-          backgroundColor: RED,
-          // backgroundColor: 'rgba(0, 0, 0, 0)',
-          fill: false,
-          showLine: true,
-          lineTension: 0,
-          data: [],
-        },
-      ]
-    },
-    options: {
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: {
-            usePointStyle: true,
-          }
-        }
-      },
-      scales: {
-        y: {
-          suggestedMin: 50,
-          suggestedMax: 100,
-
-          title: {
-            display: true,
-            text: 'Price',
-          },
-          beginAtZero: true,
-        },
-
-        x: {
-          ticks: {
-            stepSize: 2,
-            autoSkip: false,
-            callback: function (value, index, values) {
-              if (this.chart.data.labels.length - 1 % 2 === 0) {
-                if (value % 5 === 1) {
-                  // console.log("**bet is odd ", this)
-                  return value;
-                }
-              } else {
-                if (value % 5 === 0) {
-                  // console.log("**bet is even ", this)
-                  return value;
-                }
-              }
-
-              return null
-            },
-          },
-
-          title: {
-            display: true,
-            text: 'Quantity                   ',
-          },
-          beginAtZero: true,
-        },
-      }
-    }
-  });
-
-  class ProfitGraph {
-    static chart = myChart
-    static profitLineValue = 0
-    static totalExecutedVol = 0 // TODO
-    static betDirection = ""
-
-    static potentialProfit = 0
-    static cashAfterBet = 0
-    static invAfterBet = 0
-
-    static updateProfitLineFromUpcomingBet() {
-      const betData = BetsUI.getUpcomingBetData()
-      if (betData !== null) {
-        const { quantity, price, direction } = betData
-
-        this.profitLineValue = price
-        this.betDirection = direction
-        this.potentialProfit = 0
-
-        ProfitGraph.setLabelsBasedOnBet(myChart, quantity, price, direction)
-      }
-    }
-
-    static addOrderData(order) {
-      // TODO add conditional for if order and bet are compatible to graph
-      console.log("addorderinfo", order)
-      const { executedProfit, executedVolume } = order
-      const pricePerVol = Math.abs(executedProfit) / Math.abs(executedVolume)
-
-      console.log("*testProfit executedProfit: ", executedProfit, "vol", executedVolume, "price per vol", pricePerVol)
-
-      this.updatePotentialProfit(executedProfit, executedVolume, pricePerVol, order)
-      this.updateInvAfterBet()
-
-      console.log("* pricePerVol", pricePerVol)
-
-      for (let i = 0; i <= Math.abs(executedVolume).toFixed(0.001); i++) {
-        this.chart.data.datasets[0].data.push(pricePerVol)
-      }
-
-      this.chart.update();
-    }
-
-    static updateCashAfterBet() {
-      const betData = BetsUI.getUpcomingBetData()
-      if (betData == null) return
-
-      const { quantity: betVolume, price: betPrice, direction: betDirection } = betData
-
-      if (betDirection.includes("BUY")) {
-        console.log()
-
-        this.cashAfterBet = cash + (betVolume * betPrice)
-        console.log("* this.cashAfterBet1", this.cashAfterBet, "cash: ", cash, "adding", (betVolume * betPrice))
-
-        this.invAfterBet = inventory - betVolume
-
-      } else if (betDirection.includes("SELL")) {
-
-        this.cashAfterBet = cash - (betVolume * betPrice)
-        console.log("* this.cashAfterBet", this.cashAfterBet)
-        this.invAfterBet = inventory + betVolume
-
-      }
-
-      document.querySelector(".cashAfterBet").textContent = `cash after bet: ${Math.round(this.cashAfterBet)}`
-      console.log("* this.cashAfterBet", this.cashAfterBet)
-      document.querySelector(".invAfterBet").textContent = `inventory after bet: ${Math.round(this.invAfterBet)}`
-    }
-
-    static updateInvAfterBet() {
-
-    }
-
-    static updatePotentialProfit(executedProfit, executedVolume, executedPricePerVol, order) {
-      console.log("*profit updatePotentialProfit")
-      const betData = BetsUI.getUpcomingBetData()
-      if (betData == null) return
-
-      const { quantity: betVolume, price: betPrice, direction: betDirection } = betData
-
-      // quantity: 50, price: 9, direction: "BUY"}
-      let potentialProfitChange
-
-      if (betDirection.includes("BUY")) {
-        console.log("*profit 1 updatePotentialProfit")
-        potentialProfitChange = Math.abs(Math.min(betVolume, executedVolume)) * (betPrice - executedPricePerVol)
-      } else if (betDirection.includes("SELL")) {
-        console.log("*profit 2 updatePotentialProfit")
-        potentialProfitChange = Math.abs(Math.min(betVolume, executedVolume)) * (executedPricePerVol - betPrice)
-      }
-
-      console.log("*profit 3 updatePotentialProfit, got", potentialProfitChange)
-      console.log("*profit all variables", betVolume, betPrice, betDirection, executedProfit, executedVolume, executedPricePerVol)
-      console.log("*profit order", order)
-
-      this.potentialProfit += potentialProfitChange
-
-      console.log("potentialProfit:", this.potentialProfit)
-      document.querySelector(".potentialProfit").textContent = `area (additional cash you will make from the bet, not including what you will recieve from the bet): ${Math.round(this.potentialProfit)}`
-    }
-
-    static setLabelsBasedOnBet(chart, betQuantity, betPrice, betDirection) {
-      // x-axis values (labels)
-      const newLabels = []
-      for (let i = 0; i <= betQuantity; i++) {
-        newLabels.push(i)
-      }
-      chart.data.labels = newLabels
-
-      const profitPriceLine = []
-      for (let i = 0; i <= betQuantity; i++) {
-        profitPriceLine.push(betPrice)
-      }
-      chart.data.datasets[1].data = profitPriceLine
-
-      // set profit price line
-      chart.data.datasets[0].fill.target.value = betPrice
-      chart.options.scales.y.suggestedMax = betPrice
-
-      if (betDirection.includes("BUY")) {
-        console.log("below green for buy")
-        chart.data.datasets[0].fill.above = RED
-        chart.data.datasets[0].fill.below = GREEN
-      } else if (betDirection.includes("SELL")) {
-        console.log("below red for sell")
-        chart.data.datasets[0].fill.above = GREEN
-        chart.data.datasets[0].fill.below = RED
-      } else {
-        console.error("betDirection not recognized")
-      }
-
-      chart.update();
-    }
-
-    static removeData(chart) {
-      chart.data.labels.pop();
-      chart.data.datasets.forEach((dataset) => {
-        dataset.data.pop();
-      });
-      chart.update();
-    }
-  }
-
-  function debug() { }
 
   class MarketGraph {
     static flipAxes = true
@@ -1908,7 +1651,6 @@
       this.#removeFromActive(id);
       this.#appendToExpired();
 
-      ProfitGraph.updateProfitLineFromUpcomingBet()
     }
 
     static getUpcomingBetData() {
@@ -2094,7 +1836,6 @@
     cashOdometer.update(parseFloat(cash).toFixed(2));
     invOdometer.update(parseFloat(inventory).toFixed(2));
 
-    ProfitGraph.updateCashAfterBet()
   }
 
   function appendActiveOrdersTable(order) {
@@ -2155,5 +1896,7 @@
     document.querySelector('#activeOrdersRate').remove();
     document.querySelector('#activeOrdersDirection').style.width = '0';
   }
+
+  function debug() { }
 </script>
 <!-- <script src="{% static 'flow_market/react.js' %}"></script> -->
