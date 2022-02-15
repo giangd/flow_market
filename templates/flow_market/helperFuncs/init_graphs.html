@@ -1,9 +1,6 @@
 {% load otree %}
 <script>
-  // seems to bug out when using this variable in a ternary expression
   let update_freq = parseFloat('{{update_freq}}')
-  // console.log("* update_freq", update_freq)
-  // console.error("got speed:", typeof (update_freq < 0.1 ? 0 : 500), typeof (parseFloat('{{update_freq}}') < 0.1 ? 0 : 500))
 
   if (update_freq < 0.1)
     update_freq = 0.1
@@ -202,7 +199,7 @@
             },
             beginAtZero: true,
 
-            suggestedMin: 0, // TODO maybe remove after dan's video
+            suggestedMin: 0,
             suggestedMax: 20,
           },
 
@@ -213,7 +210,7 @@
             },
             beginAtZero: true,
 
-            suggestedMin: 0, // TODO maybe remove after dan's video
+            suggestedMin: 0,
             suggestedMax: 5,
           },
         },
@@ -237,7 +234,7 @@
             label: 'Bids',
             borderColor: '#007bff',
             backgroundColor: '#007bff',
-            fill: false, // TODO test
+            fill: false,
             showLine: true,
             lineTension: 0,
             data: [],
@@ -249,7 +246,6 @@
             label: 'Asks',
             borderColor: '#dc3545',
             backgroundColor: '#dc3545',
-            // backgroundColor: 'rgba(0, 0, 0, 0)',
             fill: false,
             showLine: true,
             lineTension: 0,
@@ -262,7 +258,6 @@
             label: 'Clearing Price',
             borderColor: BLUE_GREEN,
             backgroundColor: BLUE_GREEN,
-            // backgroundColor: 'rgba(0, 0, 0, 0)',
             fill: false,
             showLine: true,
             lineTension: 0,
@@ -285,7 +280,6 @@
       value: 5000,
       duration: 1 * 1000,
       format: '(,ddd)',
-      // theme: 'default',
       theme: 'minimal',
     });
     cashOdometer.render();
