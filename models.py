@@ -75,12 +75,6 @@ def parse_config(config_file):
 
 
 class Subsession(BaseSubsession):
-    # def creating_session(self):
-    #     # ENABLE
-    #     # self.group_randomly()
-    #     for p in self.get_players():
-    #         p.init_cash_inv()
-
     def creating_session(self):
         config = self.config
         if not config:
@@ -298,7 +292,6 @@ class Group(BaseGroup):
                                  0].participant._index_in_pages, payloads)
 
     def new_algo_order(self, order, playerID, currentID):
-        # TODO check if this is called from Player
         print("group algo order called")
         cache = self.order_copies
         cache[str(playerID)][str(currentID)] = {
@@ -316,8 +309,6 @@ class Group(BaseGroup):
             'q_total': order['q_total'],
             'expiration_time': order['expiration_time']
         }
-
-        # print("***cache", cache)
 
         self.order_num += 1
         self.order_copies = cache
@@ -472,18 +463,12 @@ class Group(BaseGroup):
         return index
 
     def addToCancellationQueue(self, order):
-        # **cancel received order: {'p_min': 3, 'p_max': 15, 'q_max': 50, 'u_max': 3, 'direction': 'cancel_buy', 'status': 'active', 'timestamp': 21678.5, 'orderID': '482ee287-4c6b-4bc1-bc21-e449c9b82773', 'trader_id': 1}
-        # self.cancellationQueue[order["orderID"]] = None
         print("Algo: addToCancellationQueue called with order:", order)
         temp = self.cancellationQueue
         temp[order["orderID"]] = None
         self.cancellationQueue = temp
         self.save()
         print("**cancel received order:", order, self.cancellationQueue)
-        # problem with accessing instance variables
-        # not sure how to fix, need to brainstorm
-        # https://www.google.com/search?q=make+a+static+method+access+instance+variables+python&sxsrf=AOaemvJvubJgXZRGL2GpLmkruEPNENPPTw%3A1632428274334&ei=8uBMYYPmE4P5-gT86LG4BQ&oq=make+a+static+method+access+instance+variables+python&gs_lcp=Cgdnd3Mtd2l6EAMyCAghEBYQHRAeOgcIABBHELADSgQIQRgAUJwUWI0aYLkbaAFwAngBgAHvAYgB8QiSAQUxLjQuMpgBAKABAcgBCMABAQ&sclient=gws-wiz&ved=0ahUKEwiDp6ab9ZXzAhWDvJ4KHXx0DFcQ4dUDCA4&uact=5
-        # print("**cancel test:", Group.buys())
 
     def carryOutCancellations(self):
         ordersToCancel = self.cancellationQueue.keys()
@@ -537,43 +522,6 @@ class Group(BaseGroup):
 
         self.cancellationQueue = cache
         self.save()
-        # print("new", self.cancellationQueue)
-
-        # for p in self.get_players():
-        #     for value in self.order_copies[str(p.id_in_group)].values():
-        #         if (self.treatment_val == "cda"):
-        #             if value['direction'] == 'buy' and not "expired_by_cda_sell" in value:
-        #                 buys_list.append(value)
-        #         else:
-        #             if value['direction'] == 'buy' and value['status'] == 'active':
-        #                 buys_list.append(value)
-        # return buys_list
-
-        # **cont
-        # cache[str(seller.id_in_group)][str(
-        #     sell['orderID'])]['status'] = 'expired'
-        # self.order_copies = cache
-        # self.save()
-        # sell['status'] = 'expired'
-        # # ReGraph KLF market since order expired
-        # # should_update_market_graph = True  # BUG think this is causing a bug
-        # for player in self.get_players():
-        #     payloads[player.participant.code] = {
-        #         "type": 'regraph', "buys": buys, "sells": sells, 'round': self.round_number}
-
-        # live._live_send_back(self.get_players()[0].participant._session_code, self.get_players()[
-        #                         0].participant._index_in_pages, payloads)
-
-    # def update(self):
-    #     global time_last
-    #     current_time = time.perf_counter()
-    #     global times
-    #     if len(times) > 50:
-    #         # pass
-    #         del times[0:48]
-    #     times.append(current_time-time_last)
-    #     print("avg time elapsed:", statistics.median(times))
-    #     time_last = current_time
 
     def update(self):
         # TEST does this update function follow frequency in config?
@@ -1315,8 +1263,6 @@ class Player(BasePlayer):
     def updateProfit(self, profit, calling_from_bets=False, debug=False):
         self.cash += profit
         self.save()
-        # if (calling_from_bets):
-        #     self.save()
 
         if (not calling_from_bets):
             if profit > 0:
@@ -1374,7 +1320,7 @@ class State(ExtraModel):
 
 
 def custom_export(players):
-    yield ['session_code', 'subsession_id', 'id_in_subsession','participant', 'cash', 'inventory', 'trading', 'trading_sign', 'trading_price', 'trading_rate', 'bet', 'bet_quantity', 'bet_price', 'bet_deadline', 'time', 'event']
+    yield ['session_code', 'subsession_id', 'id_in_subsession', 'participant', 'cash', 'inventory', 'trading', 'trading_sign', 'trading_price', 'trading_rate', 'bet', 'bet_quantity', 'bet_price', 'bet_deadline', 'time', 'event']
 
     groups = set()
 
